@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+datasource db {
+  provider  = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  nama      String
+  email     String   @unique
+  password  String
+  role      String   // 'admin', 'kasir', 'pelanggan'
+  orders    Order[]
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  nama     String
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  categoryId     String?         @map("category_id")
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  nama           String
+  deskripsi      String?
+  harga          Int
+  stok           Int             @default(0)
+  gambar         String?
+  status         Boolean         @default(true)
+  orderItems     OrderItem[]
+  productRecipes ProductRecipe[]
+
+  @@map("products")
+}
+
+model Table {
+  id         String  @id @default(uuid())
+  nomorMeja  Int     @unique @map("nomor_meja")
+  kapasitas  Int
+  status     String  @default("available") // 'available', 'occupied'
+  orders     Order[]
+
+  @@map("tables")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  userId     String?     @map("user_id")
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tableId    String?     @map("table_id")
+  table      Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  totalHarga Int         @default(0) @map("total_harga")
+  status     String      @default("pending") // 'pending', 'completed', 'cancelled'
+  createdAt  DateTime    @default(now()) @map("created_at")
+  orderItems OrderItem[]
+  payment    Payment?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  qty       Int
+  harga     Int
+  subtotal  Int
+
+  @@map("order_items")
+}
+
+model Payment {
+  id      String    @id @default(uuid())
+  orderId String    @unique @map("order_id")
+  order   Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  metode  String    // 'QRIS', 'Cash', 'Debit'
+  status  String    @default("unpaid") // 'unpaid', 'paid'
+  paidAt  DateTime? @map("paid_at")
+
+  @@map("payments")
+}
+
+model Inventory {
+  id             String          @id @default(uuid())
+  namaBahan      String          @map("nama_bahan")
+  stok           Int             @default(0)
+  satuan         String          // 'gram', 'ml', 'pcs'
+  minimumStok    Int             @default(0) @map("minimum_stok")
+  productRecipes ProductRecipe[]
+  inventoryLogs  InventoryLog[]
+
+  @@map("inventory")
+}
+
+model ProductRecipe {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryId String    @map("inventory_id")
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  quantity    Int
+
+  @@map("product_recipes")
+}
+
+model InventoryLog {
+  id          String    @id @default(uuid())
+  inventoryId String    @map("inventory_id")
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  jumlah      Int
+  tipe        String    // 'IN', 'OUT'
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("inventory_logs")
+}
