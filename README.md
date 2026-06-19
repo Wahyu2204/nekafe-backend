@@ -56,8 +56,9 @@ Server akan berjalan otomatis di http://localhost:5000.
 Semua endpoint dilindungi oleh middleware keamanan utama. Pasang Header Authorization: Bearer <TOKEN_JWT> setelah Anda berhasil melakukan login.
 👤 Autentikasi (/api/auth)
 
-*   **POST /register** -> Registrasi staf baru (Default role: kasir).
-*   **POST /login** -> Autentikasi user & generate Token JWT.
+    POST /register -> Registrasi staf baru (Default role: kasir).
+
+    POST /login -> Autentikasi user & generate Token JWT.
 
 📂 Kategori Menu (/api/categories)
 
